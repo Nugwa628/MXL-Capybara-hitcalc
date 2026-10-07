@@ -1,0 +1,14 @@
+MXL Capybara Calculator - build notes
+
+hitcalc.c  calculator (unchanged math), window title "MXL Capybara Calculator", starts the splash
+splash.h   the loading screen: decodes the embedded frames, plays the door, flickers, fades out (click/key skips)
+splash_data.h  generated: the 10 loading frames of the MXL Capybara Editor (256x256 RGB, frame deltas, LZ4)
+               + the title rendered in the game's fontexocet10 (solid gold 240,200,90, 1 px dark outline, gamma 0.6)
+
+Regenerate splash_data.h (needs Python + Pillow + lz4, fontexocet10.dc6/.tbl from d2data.mpq in the tools folder):
+  python tools/build_data.py "%LOCALAPPDATA%\MXL Item Collector\ui_art\splash" splash_data.h
+
+Build (clang/lld, no Windows SDK, no CRT; import libs from .def files with llvm-dlltool -m i386:x86-64):
+  llvm-rc /fo app.res tools/app.rc            (icon 1 = capybara.ico, manifest = common controls v6)
+  clang -target x86_64-pc-windows-msvc -O2 -ffreestanding -fno-builtin -fno-stack-protector -mno-stack-arg-probe -c hitcalc.c
+  lld-link /subsystem:windows /entry:WinMainCRTStartup /nodefaultlib /out:"MXL Capybara Calculator.exe" hitcalc.obj app.res user32.lib gdi32.lib kernel32.lib comctl32.lib
